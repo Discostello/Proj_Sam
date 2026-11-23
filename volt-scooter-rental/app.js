@@ -2,12 +2,13 @@
 const $ = s => document.querySelector(s);
 const BASE_URL = '';
 const API = {
-  nearby: (lat, lng, radius = 2000) => `${BASE_URL}/api/v1/telemetry/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`,
+  nearby: (lat, lng, radius = 2000) => `${BASE_URL}/api/v1/telemetry/nearby?lat=${lat}&lng=${lng}&radiusInMeters=${radius}`,
   location: `${BASE_URL}/api/v1/telemetry/location`,
   rentStart: `${BASE_URL}/api/v1/rent/start`,
   rentStop: `${BASE_URL}/api/v1/rent/stop`,
   rentHistory: (userId) => `${BASE_URL}/api/v1/rent/history?userId=${userId}`
 };
+
 
 let scooters = [];
 const state = { user: JSON.parse(localStorage.getItem('voltUser')||'null'), balance: Number(localStorage.getItem('voltBalance')||1200), selected:null, reservation:null, ride:null, rideStarted:0, rideTimer:null, bookingTimer:null, telemetryTimer:null, mapSection:'map' };
@@ -33,24 +34,40 @@ function initMap(){
  async function loadNearbyScooters(lat, lng) {
   try {
    const res = await fetch(API.nearby(lat, lng, 2000));
+   if (!res.ok) return;
    const data = await res.json();
-   const list = Array.isArray(data) ? data : (data.scooters || data.items || data.data || []);
-   scooters = list.map(item => ({
-    id: item.id ?? item.scooterId ?? item.code,
-    lat: Number(item.lat ?? item.latitude),
-    lng: Number(item.lng ?? item.lon ?? item.longitude),
-    battery: Number(item.battery ?? item.charge ?? 100)
-   }));
+   const list = Array.isArray(data) ? data : (data.scooters || []);
+
+   scooters = list.map((item, idx) => {
+    // Если бэкенд вернул просто строку/число ID (как сейчас в C# коде)
+    if (typeof item === 'string' || typeof item === 'number') {
+     return {
+      id: String(item),
+      lat: lat + (Math.sin(idx + 1) * 0.002),
+      lng: lng + (Math.cos(idx + 1) * 0.002),
+      battery: 100
+     };
+    }
+    // Если бэкенд вернул объект с координатами
+    return {
+     id: String(item.id ?? item.scooterId),
+     lat: Number(item.lat ?? item.latitude),
+     lng: Number(item.lng ?? item.longitude),
+     battery: Number(item.battery ?? item.batteryLevel ?? 100)
+    };
+   });
+
    if ($('#nearbyCount')) $('#nearbyCount').textContent = scooters.length;
    Object.values(scooterLayers).forEach(l => map.removeLayer(l));
    scooterLayers = {};
    scooters.forEach(s => {
-    const marker = L.marker([s.lat, s.lng], {icon:L.divIcon({className:'',html:'<div class="scooter-marker">🛴</div>',iconSize:[35,35],iconAnchor:[17,17]})}).addTo(map);
+    const marker = L.marker([s.lat, s.lng], {icon:L.divIcon({className:'',html:'<div class="scooter-marker">🛴</div>',iconSize:,iconAnchor:})}).addTo(map);
     marker.on('click', () => selectScooter(s));
     scooterLayers[s.id] = marker;
    });
   } catch (e) { console.error('Ошибка загрузки самокатов:', e); }
  }
+
 
  loadNearbyScooters(50.1145, 8.6815);
  map.on('moveend', () => { const c = map.getCenter(); loadNearbyScooters(c.lat, c.lng); });
