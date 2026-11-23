@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>Volt — аренда самокатов</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-row">
+        <div class="brand-mark">V</div><span class="brand-name">volt<span>.</span></span>
+        <button class="icon-btn mobile-close" id="closeSidebar" aria-label="Закрыть меню">×</button>
+      </div>
+      <div class="side-scroll">
+        <section class="welcome-card">
+          <div class="eyebrow">ГОРОДСКАЯ МОБИЛЬНОСТЬ</div>
+          <h1>Поехали<br>с ветерком.</h1>
+          <p>Найди самокат рядом и отправляйся в путь.</p>
+          <div class="weather"><span>☀</span> Отличный день для поездки</div>
+        </section>
+        <section class="user-block" id="userBlock">
+          <div class="avatar">G</div><div class="user-meta"><b>Гость</b><small>Войдите, чтобы начать поездку</small></div>
+          <button class="text-btn" id="loginBtn">Войти</button>
+        </section>
+        <section class="quick-stats">
+          <div><small>САМОКАТЫ РЯДОМ</small><strong id="nearbyCount">8</strong></div>
+          <div><small>СТАРТ ОТ</small><strong>49 ₽</strong></div>
+        </section>
+        <nav class="menu">
+          <button class="menu-item active" data-section="map"><span>⌖</span> Карта</button>
+          <button class="menu-item" data-section="wallet"><span>◈</span> Кошелек и оплата</button>
+          <button class="menu-item" data-section="passes"><span>▤</span> Тарифы и подписки</button>
+          <button class="menu-item" data-section="history"><span>◷</span> История поездок</button>
+          <button class="menu-item" data-section="support"><span>♡</span> Поддержка</button>
+        </nav>
+        <section class="trip-panel" id="tripPanel">
+          <div class="trip-top"><span class="live-dot"></span><b>Поездка не начата</b></div>
+          <p>Выберите самокат на карте, чтобы увидеть детали и тариф.</p>
+        </section>
+      </div>
+      <div class="sidebar-footer"><span class="status-dot"></span> Все системы работают <span class="version">v1.0 demo</span></div>
+    </aside>
+
+    <section class="main-area">
+      <header class="topbar">
+        <button class="icon-btn hamburger" id="openSidebar" aria-label="Открыть меню">☰</button>
+        <div class="location"><span class="pin">⌖</span><div><small>ВАША ЛОКАЦИЯ</small><b>Франкфурт-на-Майне</b></div><span class="chevron">⌄</span></div>
+        <div class="top-actions"><div class="balance-pill" id="balancePill">Баланс <b>0 ₽</b></div><button class="avatar small-avatar" id="topLogin">G</button></div>
+      </header>
+      <div class="map-wrap" id="mapWrap">
+        <div id="map"></div>
+        <div class="map-overlay-title"><span class="live-dot"></span><div><b>Карта самокатов</b><small>Выберите ближайший и начинайте поездку</small></div></div>
+        <div class="map-legend">
+          <div><i class="legend green"></i> Разрешено</div><div><i class="legend red"></i> Запрещено</div><div><i class="legend parking">P</i> Парковка</div>
+        </div>
+        <div class="map-controls"><button id="zoomIn">+</button><button id="zoomOut">−</button><button id="locate" title="Моё местоположение">🧭</button></div>
+        <div class="scooter-card hidden" id="scooterCard">
+          <button class="card-close" id="closeScooter">×</button>
+          <div class="card-heading"><div class="scooter-icon">🛴</div><div><small>ЭЛЕКТРОСАМОКАТ</small><h2 id="scooterName">№543-ABC</h2></div><span class="available">ДОСТУПЕН</span></div>
+          <div class="battery-row"><div><small>ЗАРЯД БАТАРЕИ</small><strong id="batteryValue">86%</strong></div><div class="battery-track"><i id="batteryBar"></i></div><b id="rangeValue">≈ 32 км</b></div>
+          <div class="fare-row"><div><small>СТАРТ</small><b>49 ₽</b></div><div><small>ЗА МИНУТУ</small><b>7 ₽</b></div><div><small>ПАРКОВКА</small><b>Бесплатно</b></div></div>
+          <div class="card-actions"><button class="btn secondary" id="reserveBtn">Забронировать</button><button class="btn primary" id="activateBtn">Активировать (QR)</button></div>
+          <div class="reserve-note" id="reserveNote">Бронь бесплатна и действует 10 минут.</div>
+        </div>
+        <div class="ride-widget hidden" id="rideWidget">
+          <div class="ride-live"><span class="live-dot"></span> ПОЕЗДКА ИДЕТ</div>
+          <div class="ride-time" id="rideTime">00:00</div><div class="ride-cost" id="rideCost">0 ₽</div>
+          <button class="btn danger full" id="finishRide">Завершить поездку</button>
+        </div>
+      </div>
+      <section class="content-panel hidden" id="contentPanel"></section>
+    </section>
+  </main>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal" id="modal"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
