@@ -25,12 +25,17 @@ function initMap(){
  map = L.map('map', { zoomControl: false }).setView([55.7512, 37.6184], 14);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
  // Demo rideable zone (green) and restricted area (red)
- const green=[[50.104,8.664],[50.104,8.701],[50.127,8.701],[50.127,8.664]];
+ const green=[[55.740,37.600],[55.740,37.640],[55.765,37.640],[55.765,37.600]];
  L.polygon(green,{color:'#55ae72',weight:2,fillColor:'#75cf8b',fillOpacity:.13}).addTo(map).bindTooltip('Разрешенная зона поездок');
- const red=[[50.113,8.678],[50.113,8.686],[50.119,8.686],[50.119,8.678]];
+
+ // Запретная зона (территория Кремля и Красной площади)
+ const red=[[55.749,37.614],[55.749,37.623],[55.755,37.623],[55.755,37.614]];
  L.polygon(red,{color:'#df6666',weight:2,fillColor:'#ed7777',fillOpacity:.25}).addTo(map).bindTooltip('Запретная зона — движение заблокировано');
- const parking=[[50.109,8.678],[50.117,8.693],[50.122,8.672]];
- parking.forEach((p,i)=>L.marker(p,{icon:L.divIcon({className:'',html:'<div class="parking-marker">P</div>',iconSize:[25,25],iconAnchor:[12,12]})}).addTo(map).bindTooltip('Разрешенная парковка'));
+
+ // Разрешенные парковки (Пятницкая, Китай-город, Тверская)
+ const parking=[[55.746,37.615],[55.753,37.628],[55.758,37.609]];
+ parking.forEach(p=>L.marker(p,{icon:L.divIcon({className:'',html:'<div class="parking-marker">P</div>',iconSize:,iconAnchor:})}).addTo(map).bindTooltip('Разрешенная парковка'));
+
  async function loadNearbyScooters(lat, lng) {
   try {
    const res = await fetch(API.nearby(lat, lng, 2000));
