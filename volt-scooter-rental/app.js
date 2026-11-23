@@ -34,8 +34,7 @@ function initMap(){
 
  // Разрешенные парковки (Пятницкая, Китай-город, Тверская)
  const parking=[[55.746,37.615],[55.753,37.628],[55.758,37.609]];
- parking.forEach(p=>L.marker(p,{icon:L.divIcon({className:'',html:'<div class="parking-marker">P</div>',iconSize:,iconAnchor:})}).addTo(map).bindTooltip('Разрешенная парковка'));
-
+ parking.forEach(p=>L.marker(p,{icon:L.divIcon({className:'',html:'<div class="parking-marker">P</div>',iconSize:[25,25],iconAnchor:[12,12]})}).addTo(map).bindTooltip('Разрешенная парковка'));
  async function loadNearbyScooters(lat, lng) {
   try {
    const res = await fetch(API.nearby(lat, lng, 2000));
