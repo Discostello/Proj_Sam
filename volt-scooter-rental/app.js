@@ -61,7 +61,7 @@ function initMap(){
    Object.values(scooterLayers).forEach(l => map.removeLayer(l));
    scooterLayers = {};
    scooters.forEach(s => {
-    const marker = L.marker([s.lat, s.lng], {icon:L.divIcon({className:'',html:'<div class="scooter-marker">🛴</div>',iconSize:,iconAnchor:})}).addTo(map);
+    const marker = L.marker([s.lat, s.lng], {icon:L.divIcon({className:'',html:'<div class="scooter-marker">🛴</div>',iconSize:[35,35],iconAnchor:[17,17]})}).addTo(map);
     marker.on('click', () => selectScooter(s));
     scooterLayers[s.id] = marker;
    });
