@@ -1,6 +1,5 @@
 const $ = s => document.querySelector(s);
 
-// Конфигурация эндпоинтов бэкенда
 const API = {
   nearby: (lat, lng, radius = 2000) => `/api/v1/telemetry/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`,
   location: '/api/v1/telemetry/location',
@@ -61,7 +60,6 @@ function updateUser() {
   }
 }
 
-// 1. Получение самокатов рядом из Redis (/api/v1/telemetry/nearby)
 async function loadNearbyScooters(lat = 55.7512, lng = 37.6184) {
   try {
     const res = await fetch(API.nearby(lat, lng, 2000));
@@ -89,7 +87,7 @@ async function loadNearbyScooters(lat = 55.7512, lng = 37.6184) {
           className: '',
           html: '<div class="scooter-marker">🛴</div>',
           iconSize:,
-          iconAnchor:
+          iconAnchor: [17, 17]
         })
       }).addTo(map);
       marker.on('click', () => selectScooter(s));
@@ -100,7 +98,6 @@ async function loadNearbyScooters(lat = 55.7512, lng = 37.6184) {
   }
 }
 
-// 2. Отправка телеметрии местоположения (/api/v1/telemetry/location)
 async function sendTelemetryLocation(scooterId, lat, lng) {
   try {
     await fetch(API.location, {
@@ -139,7 +136,7 @@ function initMap() {
         className: '',
         html: '<div class="parking-marker">P</div>',
         iconSize:,
-        iconAnchor:
+        iconAnchor: [12, 12]
       })
     }).addTo(map).bindTooltip('Разрешенная парковка')
   );
@@ -219,7 +216,6 @@ function activateModal() {
   };
 }
 
-// 3. Старт аренды через бэкенд (POST /api/v1/rent/start)
 async function startRide() {
   if (state.balance < 49) {
     toast('Недостаточно средств. Пополните баланс');
@@ -262,7 +258,6 @@ async function startRide() {
     state.rideTimer = setInterval(updateRide, 1000);
     updateRide();
 
-    // Отправляем геопозицию во время поездки каждые 10 секунд
     state.telemetryTimer = setInterval(() => {
       if (!state.ride) return;
       const center = map.getCenter();
@@ -284,3 +279,5 @@ function updateRide() {
   $('#rideCost').textContent = money(49 + mins * 7);
 }
 
+function finishRide() {
+  if (!state.ride) return;
