@@ -1,6 +1,6 @@
 // Volt scooter rental demo. Data and payments are simulated in the browser.
 const $ = s => document.querySelector(s);
-const BASE_URL = 'http://127.0.0.1';
+const BASE_URL = '';
 const API = {
   nearby: (lat, lng, radius = 2000) => `${BASE_URL}/api/v1/telemetry/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`,
   location: `${BASE_URL}/api/v1/telemetry/location`,
