@@ -86,12 +86,60 @@ function reserve(){
  state.bookingTimer=setInterval(()=>{if(!state.reservation)return; if(Date.now()>=state.reservation.until){clearInterval(state.bookingTimer);state.reservation=null;$('#reserveBtn').textContent='Забронировать';$('#reserveNote').textContent='Время брони истекло.';toast('Бронь истекла')}else $('#reserveNote').textContent='Осталось '+formatRemaining()+' · самокат закреплен за вами'},1000);
 }
 function activateModal(){if(!state.user)return loginModal('Войдите, чтобы начать поездку.');showModal(`<h2>Активация самоката</h2><p>Введите 6-значный код, указанный на руле самоката №${state.selected.id}.</p><div class="field"><label>КОД САМОКАТА</label><input id="scooterCode" inputmode="numeric" maxlength="6" placeholder="Например, 543123"></div><button class="btn primary" id="checkScooter">Проверить и начать</button><div class="hint">Демо-код для тестирования: 543123</div>`);$('#checkScooter').onclick=()=>{let v=$('#scooterCode').value.trim();if(!/^\d{6}$/.test(v)){toast('Введите 6 цифр');return}if(v!=='543123'){toast('Код не найден. Попробуйте 543123');return}closeModal();startRide()}}
-function startRide(){
+async function startRide(){
  if(state.balance<49){toast('Недостаточно средств. Пополните баланс');walletSection();return}
- state.balance-=49;save();updateUser();state.ride={id:state.selected.id};state.rideStarted=Date.now();state.reservation=null;clearInterval(state.bookingTimer);
- $('#scooterCard').classList.add('hidden');$('#rideWidget').classList.remove('hidden');$('#tripPanel').innerHTML='<div class="trip-top"><span class="live-dot"></span><b>Поездка активна</b></div><p>Самокат №'+state.ride.id+' · хорошей дороги!</p>';
- state.rideTimer=setInterval(updateRide,1000);updateRide();toast('Поездка начата! Старт: 49 ₽');
+ 
+ try {
+  // 1. Отправляем запрос на старт аренды
+  const res = await fetch(API.rentStart, {
+   method: 'POST',
+   headers: { 'Content-Type': 'application/json' },
+   body: JSON.stringify({
+    userId: Number(state.user?.id) || 1,
+    scooterId: Number(state.selected.id) || 1
+   })
+  });
+
+  if (!res.ok) {
+   toast('Ошибка старта аренды на сервере');
+   return;
+  }
+
+  const rentData = await res.json().catch(() => ({}));
+
+  // 2. Запускаем поездку на фронтенде
+  state.balance-=49;save();updateUser();
+  state.ride={
+   id: state.selected.id,
+   rentId: rentData.rentId ?? rentData.id ?? null
+  };
+  state.rideStarted=Date.now();state.reservation=null;clearInterval(state.bookingTimer);
+  $('#scooterCard').classList.add('hidden');$('#rideWidget').classList.remove('hidden');$('#tripPanel').innerHTML='<div class="trip-top"><span class="live-dot"></span><b>Поездка активна</b></div><p>Самокат №'+state.ride.id+' · хорошей дороги!</p>';
+  state.rideTimer=setInterval(updateRide,1000);updateRide();
+
+  // 3. Отправляем координаты самоката на C# сервис телеметрии каждые 10 секунд
+  state.telemetryTimer = setInterval(() => {
+   if (!state.ride) return;
+   const c = map.getCenter();
+   fetch(API.location, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+     scooterId: Number(state.ride.id) || 1,
+     latitude: c.lat,
+     longitude: c.lng,
+     batteryLevel: state.selected?.battery ?? 95
+    })
+   }).catch(console.error);
+  }, 10000);
+
+  toast('Поездка начата! Старт: 49 ₽');
+ } catch (e) {
+  console.error(e);
+  toast('Не удалось связаться с сервером');
+ }
 }
+
 function updateRide(){if(!state.ride)return;let sec=Math.floor((Date.now()-state.rideStarted)/1000),mins=Math.floor(sec/60);$('#rideTime').textContent=String(Math.floor(sec/3600)).padStart(2,'0')+':'+String(Math.floor(sec/60)%60).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');$('#rideCost').textContent=money(49+mins*7)}
 function finishRide(){
  if(!state.ride)return;showModal(`<h2>Завершить поездку?</h2><p>Убедитесь, что вы находитесь в разрешенной зоне парковки. Завершение поездки будет подтверждено после проверки геозоны.</p><button class="btn primary" id="confirmFinish">Да, завершить</button><button class="btn secondary" id="cancelFinish">Продолжить поездку</button>`);$('#cancelFinish').onclick=closeModal;$('#confirmFinish').onclick=async ()=>{
