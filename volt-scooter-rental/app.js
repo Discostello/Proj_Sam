@@ -82,12 +82,12 @@ async function loadNearbyScooters(lat = 55.7512, lng = 37.6184) {
     scooterLayers = {};
 
     scooters.forEach(s => {
-      const marker = L.marker([s.lat, s.lng], {
+      const marker = L.marker(L.latLng(s.lat, s.lng), {
         icon: L.divIcon({
           className: '',
           html: '<div class="scooter-marker">🛴</div>',
-          iconSize:,
-          iconAnchor: [17, 17]
+          iconSize: L.point(35, 35),
+          iconAnchor: L.point(17, 17)
         })
       }).addTo(map);
       marker.on('click', () => selectScooter(s));
@@ -115,28 +115,42 @@ async function sendTelemetryLocation(scooterId, lat, lng) {
 }
 
 function initMap() {
-  map = L.map('map', { zoomControl: false }).setView([55.7512, 37.6184], 14);
+  map = L.map('map', { zoomControl: false }).setView(L.latLng(55.7512, 37.6184), 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  const green = [[55.740, 37.600], [55.740, 37.640], [55.765, 37.640], [55.765, 37.600]];
+  const green = [
+    L.latLng(55.740, 37.600),
+    L.latLng(55.740, 37.640),
+    L.latLng(55.765, 37.640),
+    L.latLng(55.765, 37.600)
+  ];
   L.polygon(green, { color: '#55ae72', weight: 2, fillColor: '#75cf8b', fillOpacity: .13 })
     .addTo(map).bindTooltip('Разрешенная зона поездок');
 
-  const red = [[55.749, 37.614], [55.749, 37.623], [55.755, 37.623], [55.755, 37.614]];
+  const red = [
+    L.latLng(55.749, 37.614),
+    L.latLng(55.749, 37.623),
+    L.latLng(55.755, 37.623),
+    L.latLng(55.755, 37.614)
+  ];
   L.polygon(red, { color: '#df6666', weight: 2, fillColor: '#ed7777', fillOpacity: .25 })
     .addTo(map).bindTooltip('Запретная зона — движение заблокировано');
 
-  const parking = [[55.746, 37.615], [55.753, 37.628], [55.758, 37.609]];
+  const parking = [
+    L.latLng(55.746, 37.615),
+    L.latLng(55.753, 37.628),
+    L.latLng(55.758, 37.609)
+  ];
   parking.forEach(p =>
     L.marker(p, {
       icon: L.divIcon({
         className: '',
         html: '<div class="parking-marker">P</div>',
-        iconSize:,
-        iconAnchor: [12, 12]
+        iconSize: L.point(25, 25),
+        iconAnchor: L.point(12, 12)
       })
     }).addTo(map).bindTooltip('Разрешенная парковка')
   );
@@ -160,7 +174,7 @@ function selectScooter(s) {
     ? 'Бронь активна: ' + formatRemaining()
     : 'Бронь бесплатна и действует 10 минут.';
   $('#reserveBtn').textContent = state.reservation?.id === s.id ? 'Отменить бронь' : 'Забронировать';
-  map.panTo([s.lat, s.lng]);
+  map.panTo(L.latLng(s.lat, s.lng));
 }
 
 function formatRemaining() {
