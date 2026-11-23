@@ -11,7 +11,6 @@ const API = {
 
 let scooters = [];
 const state = { user: JSON.parse(localStorage.getItem('voltUser')||'null'), balance: Number(localStorage.getItem('voltBalance')||1200), selected:null, reservation:null, ride:null, rideStarted:0, rideTimer:null, bookingTimer:null, telemetryTimer:null, mapSection:'map' };
-let scooters = [];
 let map, scooterLayers = {};
 function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600)}
 function money(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
