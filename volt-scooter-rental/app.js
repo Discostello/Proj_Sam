@@ -22,7 +22,7 @@ function updateUser(){
  else {block.innerHTML=`<div class="avatar">G</div><div class="user-meta"><b>Гость</b><small>Войдите, чтобы начать поездку</small></div><button class="text-btn" id="loginBtn">Войти</button>`;$('#loginBtn').onclick=loginModal;$('#topLogin').textContent='G';pill.innerHTML='Баланс <b>—</b>'}
 }
 function initMap(){
- map=L.map('map',{zoomControl:false}).setView([50.1145,8.6815],14);
+ map = L.map('map', { zoomControl: false }).setView([55.7512, 37.6184], 14);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
  // Demo rideable zone (green) and restricted area (red)
  const green=[[50.104,8.664],[50.104,8.701],[50.127,8.701],[50.127,8.664]];
@@ -69,7 +69,7 @@ function initMap(){
  }
 
 
- loadNearbyScooters(50.1145, 8.6815);
+ loadNearbyScooters(55.7512, 37.6184);
  map.on('moveend', () => { const c = map.getCenter(); loadNearbyScooters(c.lat, c.lng); });
 }
 function selectScooter(s){
