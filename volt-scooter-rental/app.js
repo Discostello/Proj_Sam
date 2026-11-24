@@ -4,6 +4,7 @@ const BASE_URL = '';
 const API = {
   nearby: (lat, lng, radius = 2000) => `${BASE_URL}/api/v1/telemetry/nearby?lat=${lat}&lng=${lng}&radiusInMeters=${radius}`,
   location: `${BASE_URL}/api/v1/telemetry/location`,
+  auth: `${BASE_URL}/api/v1/rent/auth`,
   rentStart: `${BASE_URL}/api/v1/rent/start`,
   rentStop: `${BASE_URL}/api/v1/rent/stop`,
   rentHistory: (userId) => `${BASE_URL}/api/v1/rent/history/${userId}`
@@ -188,8 +189,32 @@ function finishRide(){
 
 function showModal(html){$('#modalContent').innerHTML=html;$('#modalBackdrop').classList.remove('hidden')}
 function closeModal(){$('#modalBackdrop').classList.add('hidden')}
-function loginModal(message='Войдите или зарегистрируйтесь, чтобы пользоваться всеми возможностями Volt.'){showModal(`<h2>Добро пожаловать в Volt</h2><p>${message}</p><div class="field"><label>НОМЕР ТЕЛЕФОНА</label><input id="phone" type="tel" placeholder="+7 900 000-00-00"></div><button class="btn primary" id="sendSms">Получить SMS-код</button><div class="hint">Демо-режим: SMS-код будет показан на следующем шаге.</div>`);$('#sendSms').onclick=()=>{let phone=$('#phone').value.trim();if(phone.length<7){toast('Введите корректный номер');return}showModal(`<h2>Подтверждение номера</h2><p>Мы отправили код на ${phone}. В демо используйте код <b>123456</b>.</p><div class="field"><label>КОД ИЗ SMS</label><input id="smsCode" inputmode="numeric" maxlength="6" placeholder="123456"></div><button class="btn primary" id="verifySms">Подтвердить</button>`);$('#verifySms').onclick=()=>{if($('#smsCode').value!=='123456'){toast('Неверный код');return}state.user={name:'Пользователь',phone};save();updateUser();closeModal();toast('Вы успешно вошли')}}}
-function walletSection(){renderSection('wallet','Кошелек и оплата','Управляйте балансом и способами оплаты.',`<div class="section-card"><h3>Ваш баланс</h3><h2>${money(state.balance)}</h2><button class="btn primary" id="topup">Пополнить баланс</button></div><div class="section-card"><h3>Банковские карты</h3><div class="section-row"><span>Visa •••• 4242 <small>(демо)</small></span><b>Основная</b></div><button class="btn secondary" id="addCard">+ Привязать новую карту</button></div>`);$('#topup').onclick=()=>showModal(`<h2>Пополнение баланса</h2><p>Выберите сумму пополнения.</p><div class="field"><label>СУММА, ₽</label><input id="topupAmount" type="number" min="100" value="500"></div><button class="btn primary" id="doTopup">Пополнить</button><div class="hint">Демо: реальные платежи не выполняются.</div>`);$('#doTopup').onclick=()=>{let n=Number($('#topupAmount').value);if(n<100||!Number.isFinite(n)){toast('Минимум 100 ₽');return}state.balance+=n;save();updateUser();closeModal();walletSection();toast('Баланс пополнен на '+money(n))};$('#addCard').onclick=()=>showModal(`<h2>Новая карта</h2><p>Демо-форма привязки карты. Данные не отправляются.</p><div class="field"><label>НОМЕР КАРТЫ</label><input placeholder="0000 0000 0000 0000" maxlength="19"></div><div class="field"><label>СРОК ДЕЙСТВИЯ</label><input placeholder="ММ/ГГ"></div><button class="btn primary" id="saveCard">Сохранить карту</button>`);$('#saveCard').onclick=()=>{closeModal();toast('Демо: карта добавлена')}}
+function loginModal(message='Войдите или зарегистрируйтесь, чтобы пользоваться всеми возможностями Volt.'){
+ showModal(`<h2>Добро пожаловать в Volt</h2><p>${message}</p><div class="field"><label>ВАШЕ ИМЯ</label><input id="userName" type="text" placeholder="Иван"></div><div class="field"><label>НОМЕР ТЕЛЕФОНА</label><input id="phone" type="tel" placeholder="+7 900 000-00-00"></div><button class="btn primary" id="sendSms">Получить SMS-код</button><div class="hint">Демо-режим: SMS-код будет показан на следующем шаге.</div>`);
+ $('#sendSms').onclick=()=>{
+  let phone=$('#phone').value.trim();
+  let name=$('#userName').value.trim() || 'Пользователь';
+  if(phone.length<7){toast('Введите корректный номер');return}
+  showModal(`<h2>Подтверждение номера</h2><p>Мы отправили код на ${phone}. В демо используйте код <b>123456</b>.</p><div class="field"><label>КОД ИЗ SMS</label><input id="smsCode" inputmode="numeric" maxlength="6" placeholder="123456"></div><button class="btn primary" id="verifySms">Подтвердить</button>`);
+  $('#verifySms').onclick=async ()=>{
+   if($('#smsCode').value!=='123456'){toast('Неверный код');return}
+   try {
+    const res = await fetch(API.auth, {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ phone, name, surname: '', lastName: '', email: '' })
+    });
+    if(!res.ok) return toast('Ошибка регистрации на сервере');
+    const data = await res.json();
+    state.user = { id: data.id, name, phone };
+    save();updateUser();closeModal();
+    toast('Вы успешно вошли (ID: ' + data.id + ')');
+   } catch(e) {
+    toast('Сервер недоступен');
+   }
+  };
+ };
+}function walletSection(){renderSection('wallet','Кошелек и оплата','Управляйте балансом и способами оплаты.',`<div class="section-card"><h3>Ваш баланс</h3><h2>${money(state.balance)}</h2><button class="btn primary" id="topup">Пополнить баланс</button></div><div class="section-card"><h3>Банковские карты</h3><div class="section-row"><span>Visa •••• 4242 <small>(демо)</small></span><b>Основная</b></div><button class="btn secondary" id="addCard">+ Привязать новую карту</button></div>`);$('#topup').onclick=()=>showModal(`<h2>Пополнение баланса</h2><p>Выберите сумму пополнения.</p><div class="field"><label>СУММА, ₽</label><input id="topupAmount" type="number" min="100" value="500"></div><button class="btn primary" id="doTopup">Пополнить</button><div class="hint">Демо: реальные платежи не выполняются.</div>`);$('#doTopup').onclick=()=>{let n=Number($('#topupAmount').value);if(n<100||!Number.isFinite(n)){toast('Минимум 100 ₽');return}state.balance+=n;save();updateUser();closeModal();walletSection();toast('Баланс пополнен на '+money(n))};$('#addCard').onclick=()=>showModal(`<h2>Новая карта</h2><p>Демо-форма привязки карты. Данные не отправляются.</p><div class="field"><label>НОМЕР КАРТЫ</label><input placeholder="0000 0000 0000 0000" maxlength="19"></div><div class="field"><label>СРОК ДЕЙСТВИЯ</label><input placeholder="ММ/ГГ"></div><button class="btn primary" id="saveCard">Сохранить карту</button>`);$('#saveCard').onclick=()=>{closeModal();toast('Демо: карта добавлена')}}
 function renderSection(key,title,sub,body){state.mapSection=key;$('#mapWrap').classList.add('hidden');const p=$('#contentPanel');p.classList.remove('hidden');p.innerHTML=`<h2>${title}</h2><div class="sub">${sub}</div>${body}`;document.querySelectorAll('.menu-item').forEach(b=>b.classList.toggle('active',b.dataset.section===key))}
 async function historySection(){
  renderSection('history','История поездок','Ваши завершенные поездки.',`<div class="section-card"><p>Загрузка истории...</p></div>`);
